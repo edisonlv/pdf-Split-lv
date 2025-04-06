@@ -31,9 +31,31 @@ jobs:
       run: |
         python build_exe.py
         
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
+    - name: Verify exe file
+      run: |
+        dir dist
+        if not exist "dist\PDF分割工具.exe" (
+          echo "Error: EXE file not found!"
+          exit 1
+        )
+        
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: PDF分割工具
-        path: "./dist/PDF分割工具.exe"
-        if-no-files-found: error 
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/PDF分割工具.exe
+        asset_name: PDF分割工具.exe
+        asset_content_type: application/octet-stream 
