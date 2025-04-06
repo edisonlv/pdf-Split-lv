@@ -32,11 +32,12 @@ jobs:
         python build_exe.py
         
     - name: Verify exe file
+      shell: cmd
       run: |
         dir dist
-        if not exist "dist\PDF分割工具.exe" (
-          echo "Error: EXE file not found!"
-          exit 1
+        IF NOT EXIST "dist\PDF分割工具.exe" (
+          echo Error: EXE file not found!
+          exit /b 1
         )
         
     - name: Create Release
