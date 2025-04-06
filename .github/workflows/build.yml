@@ -28,13 +28,8 @@ jobs:
         pip install -r requirements.txt
         
     - name: Build with PyInstaller
-      run: |
-        python -m PyInstaller --clean ^
-          --onefile ^
-          --noconsole ^
-          --name "PDF分割工具" ^
-          --add-data "README.md;." ^
-          pdf_splitter_tkinter_new.py
+      shell: cmd
+      run: python -m PyInstaller --clean --onefile --noconsole --name "PDF分割工具" --add-data "README.md;." pdf_splitter_tkinter_new.py
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
