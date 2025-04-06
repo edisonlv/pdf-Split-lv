@@ -35,32 +35,26 @@ jobs:
         echo "Build directory contents:"
         dir /s /b dist
 
-    - name: Verify Build Output
-      shell: cmd
-      run: |
-        echo "Current directory:"
-        cd
-        echo "Dist directory contents:"
-        dir dist
-        echo "Full path of exe:"
-        dir /s /b dist\PDF分割工具.exe
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: PDF分割工具
+        path: dist/PDF分割工具.exe
 
-    - name: Prepare Release Asset
-      shell: cmd
+    - name: Create Release Tag
+      id: tag
       run: |
-        cd dist
-        copy "PDF分割工具.exe" "..\PDF分割工具.exe"
-        cd ..
-        dir
+        echo "::set-output name=tag_name::v${{ github.run_number }}"
+        echo "::set-output name=release_name::Release v${{ github.run_number }}"
 
     - name: Create Release
-      uses: softprops/action-gh-release@v1
-      if: github.event_name == 'push'
+      uses: ncipollo/release-action@v1
       with:
-        files: PDF分割工具.exe
-        tag_name: v${{ github.run_number }}
-        name: Release v${{ github.run_number }}
+        artifacts: "dist/PDF分割工具.exe"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ steps.tag.outputs.tag_name }}
+        name: ${{ steps.tag.outputs.release_name }}
         draft: false
         prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        allowUpdates: true
+        replacesArtifacts: true 
