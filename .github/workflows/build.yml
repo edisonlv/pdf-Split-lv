@@ -32,7 +32,8 @@ jobs:
         python build_exe.py
         
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: PDF分割工具
-        path: dist/PDF分割工具.exe 
+        path: "./dist/PDF分割工具.exe"
+        if-no-files-found: error 
