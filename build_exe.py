@@ -13,6 +13,20 @@ params = [
     '--onefile',  # 打包成单个文件
     '--clean',  # 清理临时文件
     '--windowed',  # Windows下不显示命令行
+    '--add-data=README.md;.',  # 添加README文件
+    '--hidden-import=tkinter',
+    '--hidden-import=PIL',
+    '--hidden-import=PyPDF2',
+    '--hidden-import=fitz',
+    '--hidden-import=json',
+    '--hidden-import=os',
+    '--hidden-import=sys',
+    '--hidden-import=re',
+    '--hidden-import=shutil',
+    '--hidden-import=tempfile',
+    '--hidden-import=threading',
+    '--hidden-import=queue',
+    '--hidden-import=time',
 ]
 
 # 运行PyInstaller
