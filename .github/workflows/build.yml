@@ -33,7 +33,7 @@ jobs:
         echo "Current directory:"
         dir
         echo "Building exe..."
-        pyinstaller --name="PDF分割工具" --noconsole --onefile --clean --windowed pdf_splitter_tkinter_new.py
+        pyinstaller pdf_splitter.spec
         echo "Build complete, checking dist directory:"
         dir dist
         
