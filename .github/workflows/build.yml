@@ -29,13 +29,29 @@ jobs:
         
     - name: Build with PyInstaller
       shell: cmd
-      run: python -m PyInstaller --clean --onefile --noconsole --name "PDF分割工具" --add-data "README.md;." pdf_splitter_tkinter_new.py
+      run: |
+        python -m PyInstaller --clean --onefile --noconsole --name "PDF分割工具" --add-data "README.md;." pdf_splitter_tkinter_new.py
+        dir dist
+        echo "Build directory contents:"
+        dir /s /b dist
+
+    - name: Verify Build Output
+      shell: cmd
+      run: |
+        echo "Current directory:"
+        cd
+        echo "Dist directory contents:"
+        dir dist
+        echo "Full path of exe:"
+        dir /s /b dist\PDF分割工具.exe
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       if: github.event_name == 'push'
       with:
-        files: dist/PDF分割工具.exe
+        files: |
+          dist/PDF分割工具.exe
+          dist/PDF*.exe
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
         draft: false
