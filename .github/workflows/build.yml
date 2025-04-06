@@ -26,19 +26,48 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        echo "Python and pip versions:"
+        python --version
+        pip --version
         
     - name: Build with PyInstaller
       shell: cmd
       run: |
-        python -m PyInstaller --clean --onefile --noconsole --name "PDF分割工具" --add-data "README.md;." pdf_splitter_tkinter_new.py
+        echo "Starting PyInstaller build..."
+        python -m PyInstaller --clean --onefile --noconsole --name "PDFSplitter" pdf_splitter_tkinter_new.py
+        echo "PyInstaller finished. Checking dist directory content:"
         dir dist
-        
-    - name: Create GitHub Release
-      uses: ncipollo/release-action@v1
+        echo "Full path check:"
+        dir /s /b dist\*.exe
+
+    - name: DEBUG - Verify executable exists
+      shell: cmd
+      run: |
+        echo "Current directory:"
+        cd
+        echo "Directory contents:"
+        dir
+        echo "DIST directory contents:"
+        dir dist
+        if exist "dist\PDFSplitter.exe" (
+          echo "SUCCESS: PDFSplitter.exe exists!"
+          echo %CD%\dist\PDFSplitter.exe
+        ) else (
+          echo "ERROR: PDFSplitter.exe NOT found!"
+          dir /s *.exe
+        )
+    
+    - name: Create manual artifact
+      uses: actions/upload-artifact@v2
       with:
-        artifacts: "dist/PDF分割工具.exe"
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: v${{ github.run_number }}
+        name: PDFSplitter
+        path: dist/*.exe
+        if-no-files-found: warn
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/*.exe
+        tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
-        allowUpdates: true
-        replacesArtifacts: true 
+        fail_on_unmatched_files: false 
