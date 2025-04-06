@@ -28,12 +28,17 @@ jobs:
         pip install -r requirements.txt
         pip list
         
+    - name: Generate spec file
+      run: |
+        echo "Generating spec file..."
+        pyi-makespec --name="PDF分割工具" --noconsole --onefile pdf_splitter_tkinter_new.py
+        
     - name: Build with PyInstaller
       run: |
         echo "Current directory:"
         dir
         echo "Building exe..."
-        pyinstaller pdf_splitter.spec
+        pyinstaller --clean "PDF分割工具.spec"
         echo "Build complete, checking dist directory:"
         dir dist
         
