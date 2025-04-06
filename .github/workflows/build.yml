@@ -31,6 +31,13 @@ jobs:
       shell: cmd
       run: python -m PyInstaller --clean --onefile --noconsole --name "PDF分割工具" --add-data "README.md;." pdf_splitter_tkinter_new.py
 
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: PDF分割工具
+        path: dist/PDF分割工具.exe
+        if-no-files-found: error
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
