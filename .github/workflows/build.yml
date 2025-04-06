@@ -45,13 +45,19 @@ jobs:
         echo "Full path of exe:"
         dir /s /b dist\PDF分割工具.exe
 
+    - name: Prepare Release Asset
+      shell: cmd
+      run: |
+        cd dist
+        copy "PDF分割工具.exe" "..\PDF分割工具.exe"
+        cd ..
+        dir
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       if: github.event_name == 'push'
       with:
-        files: |
-          dist/PDF分割工具.exe
-          dist/PDF*.exe
+        files: PDF分割工具.exe
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
         draft: false
