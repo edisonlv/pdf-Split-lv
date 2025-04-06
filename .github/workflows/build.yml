@@ -25,15 +25,25 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install pyinstaller
         pip install -r requirements.txt
+        pip list
         
     - name: Build with PyInstaller
       run: |
+        echo "Current directory:"
+        dir
+        echo "Building exe..."
         python build_exe.py
+        echo "Build complete, checking dist directory:"
+        dir dist
         
     - name: Verify exe file
       shell: cmd
       run: |
+        echo "Listing workspace directory:"
+        dir
+        echo "Listing dist directory:"
         dir dist
         IF NOT EXIST "dist\PDF分割工具.exe" (
           echo Error: EXE file not found!
