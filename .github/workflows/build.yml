@@ -31,28 +31,29 @@ jobs:
     - name: Generate spec file
       run: |
         echo "Generating spec file..."
-        pyi-makespec --name="PDF分割工具" --noconsole --onefile pdf_splitter_tkinter_new.py
+        pyi-makespec --name="PDFSplitter" --noconsole --onefile pdf_splitter_tkinter_new.py
         
     - name: Build with PyInstaller
       run: |
         echo "Current directory:"
         dir
         echo "Building exe..."
-        pyinstaller --clean "PDF分割工具.spec"
+        pyinstaller --clean PDFSplitter.spec
         echo "Build complete, checking dist directory:"
         dir dist
         
-    - name: Verify exe file
+    - name: Verify and rename exe file
       shell: cmd
       run: |
         echo "Listing workspace directory:"
         dir
         echo "Listing dist directory:"
         dir dist
-        IF NOT EXIST "dist\PDF分割工具.exe" (
+        IF NOT EXIST "dist\PDFSplitter.exe" (
           echo Error: EXE file not found!
           exit /b 1
         )
+        ren "dist\PDFSplitter.exe" "PDF分割工具.exe"
         
     - name: Create Release
       id: create_release
