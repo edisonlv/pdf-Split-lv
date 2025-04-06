@@ -51,23 +51,20 @@ jobs:
         dir dist
         if exist "dist\PDFSplitter.exe" (
           echo "SUCCESS: PDFSplitter.exe exists!"
-          echo %CD%\dist\PDFSplitter.exe
+          copy "dist\PDFSplitter.exe" "PDFSplitter.exe"
+          echo "Copied to root directory"
+          dir
         ) else (
           echo "ERROR: PDFSplitter.exe NOT found!"
           dir /s *.exe
         )
-    
-    - name: Create manual artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: PDFSplitter
-        path: dist/*.exe
-        if-no-files-found: warn
         
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: ncipollo/release-action@v1
       with:
-        files: dist/*.exe
-        tag_name: v${{ github.run_number }}
+        artifacts: "PDFSplitter.exe"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
-        fail_on_unmatched_files: false 
+        allowUpdates: true
+        replacesArtifacts: true 
