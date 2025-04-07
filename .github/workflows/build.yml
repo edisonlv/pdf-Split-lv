@@ -1,4 +1,4 @@
-name: Build PDF Splitter (Fresh Start)
+name: Comprehensive PDF Splitter Build
 
 on:
   push:
@@ -9,43 +9,164 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  debug-and-build:
+    name: Debug Environment & Build
     runs-on: windows-latest
+    outputs:
+      exe_exists: ${{ steps.check_exe.outputs.exe_exists }}
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - name: Check Runner Environment
+        shell: cmd
+        run: |
+          echo "==== RUNNER INFO ===="
+          echo "OS: %OS%"
+          echo "COMPUTERNAME: %COMPUTERNAME%"
+          echo "USERNAME: %USERNAME%"
+          echo "TEMP: %TEMP%"
+          echo "Path: %PATH%"
+          echo "Current directory:"
+          cd
+          
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      - name: Check Repository Content
+        shell: cmd
+        run: |
+          echo "==== REPOSITORY CONTENT ===="
+          dir
+          if exist "pdf_splitter_tkinter_new.py" (
+            echo "Found pdf_splitter_tkinter_new.py"
+          ) else (
+            echo "ERROR: pdf_splitter_tkinter_new.py not found!"
+            exit /b 1
+          )
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller==6.3.0 # Explicitly install PyInstaller
-
-      - name: Build executable
+      
+      - name: Verify Python Installation
         shell: cmd
         run: |
-          echo "Running PyInstaller..."
+          echo "==== PYTHON INSTALLATION ===="
+          python --version
+          pip --version
+          echo "Python executable path:"
+          where python
+          
+      - name: Install Dependencies
+        shell: cmd
+        run: |
+          echo "==== INSTALLING DEPENDENCIES ===="
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller==6.3.0
+          echo "Dependencies installed successfully"
+          
+      - name: Build EXE with PyInstaller
+        shell: cmd
+        run: |
+          echo "==== BUILDING EXECUTABLE ===="
           pyinstaller --noconfirm --onefile --noconsole --name "PDFSplitter" pdf_splitter_tkinter_new.py
-          echo "Build finished. Checking dist directory:"
+          echo "Build command exit code: %ERRORLEVEL%"
+          if %ERRORLEVEL% neq 0 (
+            echo "PyInstaller failed with exit code %ERRORLEVEL%"
+            exit /b %ERRORLEVEL%
+          )
+          
+      - name: Check EXE file
+        id: check_exe
+        shell: cmd
+        run: |
+          echo "==== CHECKING EXECUTABLE ===="
           dir dist
-          if not exist "dist\PDFSplitter.exe" (
-            echo "Build failed: PDFSplitter.exe not found!"
+          set EXE_PATH=dist\PDFSplitter.exe
+          if exist "%EXE_PATH%" (
+            echo "SUCCESS: PDFSplitter.exe found at %cd%\%EXE_PATH%"
+            echo "File size:"
+            dir "%EXE_PATH%"
+            echo "exe_exists=true" >> %GITHUB_OUTPUT%
+          ) else (
+            echo "ERROR: PDFSplitter.exe NOT found!"
+            echo "exe_exists=false" >> %GITHUB_OUTPUT%
             exit /b 1
           )
-          echo "Build successful!"
+          
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDFSplitter
+          path: dist/*.exe
+          retention-days: 1
 
-      - name: Create Release
+  # Method 1: Direct Release
+  create-release-method1:
+    name: Create Release (Direct)
+    needs: debug-and-build
+    runs-on: windows-latest
+    if: needs.debug-and-build.outputs.exe_exists == 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: PDFSplitter
+          path: ./dist
+          
+      - name: Verify downloaded artifacts
+        shell: cmd
+        run: |
+          echo "==== VERIFYING DOWNLOADED ARTIFACTS ===="
+          dir
+          echo "DIST directory:"
+          dir dist
+          if not exist "dist\PDFSplitter.exe" (
+            echo "ERROR: Downloaded PDFSplitter.exe not found!"
+            exit /b 1
+          )
+          
+      - name: Create Release (softprops method)
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./dist/PDFSplitter.exe
+          name: Release v${{ github.run_number }}-A
+          tag_name: v${{ github.run_number }}-A
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: false
+          body: |
+            PDF Splitter Tool Release v${{ github.run_number }}-A
+            Built with PyInstaller on Windows
+            
+  # Method 2: Alternative Release Method
+  create-release-method2:
+    name: Create Release (Alternative)
+    needs: debug-and-build
+    runs-on: windows-latest
+    if: needs.debug-and-build.outputs.exe_exists == 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: PDFSplitter
+          path: ./dist
+          
+      - name: Create Release (ncipollo method)
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "dist/PDFSplitter.exe"
+          artifacts: "./dist/PDFSplitter.exe"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
-          body: "Fresh build: v${{ github.run_number }}"
-          allowUpdates: true
-          replacesArtifacts: true 
+          tag: v${{ github.run_number }}-B
+          name: Release v${{ github.run_number }}-B
+          body: |
+            PDF Splitter Tool Release v${{ github.run_number }}-B
+            Built with PyInstaller on Windows 
