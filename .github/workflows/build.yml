@@ -42,7 +42,7 @@ jobs:
         echo "Full path check:"
         dir /s /b dist\*.exe
 
-    - name: Verify and Prepare Asset
+    - name: Verify Asset Path
       id: verify_asset
       shell: cmd
       run: |
@@ -53,25 +53,7 @@ jobs:
           exit /b 1
         )
         echo "SUCCESS: PDFSplitter.exe found in dist."
-        echo "Copying asset to root directory..."
-        copy "dist\PDFSplitter.exe" "PDFSplitter.exe"
-        echo "Copy finished with exit code %ERRORLEVEL%. Verifying file in root:"
-        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-        dir PDFSplitter.exe
-        if not exist "PDFSplitter.exe" (
-          echo "ERROR: Failed to copy PDFSplitter.exe to root directory!"
-          exit /b 1
-        )
-        echo "SUCCESS: PDFSplitter.exe verified in root directory."
-        echo "::set-output name=asset_path::./PDFSplitter.exe"
-
-    - name: List files before release
-      shell: cmd
-      run: |
-        echo "Listing root directory before release:"
-        dir
-        echo "Listing dist directory before release:"
-        dir dist
+        echo "::set-output name=asset_path::dist/PDFSplitter.exe"
         
     - name: Create Release
       uses: ncipollo/release-action@v1
