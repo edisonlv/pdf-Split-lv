@@ -53,14 +53,18 @@ jobs:
           exit /b 1
         )
         echo "SUCCESS: PDFSplitter.exe found in dist."
-        echo "::set-output name=asset_path::dist/PDFSplitter.exe"
+        echo "::set-output name=asset_path_fwd::dist/PDFSplitter.exe"
+        echo "::set-output name=asset_path_bwd::dist\PDFSplitter.exe"
         
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: ${{ steps.verify_asset.outputs.asset_path }}
+        artifacts: |
+          ${{ steps.verify_asset.outputs.asset_path_fwd }}
+          ${{ steps.verify_asset.outputs.asset_path_bwd }}
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
         allowUpdates: true
-        replacesArtifacts: true 
+        replacesArtifacts: true
+        body: "自动构建的 PDF 分割工具版本 v${{ github.run_number }}" 
