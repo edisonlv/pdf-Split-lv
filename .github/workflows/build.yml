@@ -1,9 +1,7 @@
-name: Build PDF Splitter
+name: Build PDF Splitter (Fresh Start)
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
   workflow_dispatch:
 
@@ -11,60 +9,43 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-and-release:
     runs-on: windows-latest
-    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        echo "Python and pip versions:"
-        python --version
-        pip --version
-        
-    - name: Build with PyInstaller
-      id: build_exe
-      shell: cmd
-      run: |
-        echo "Starting PyInstaller build..."
-        python -m PyInstaller --clean --onefile --noconsole --name "PDFSplitter" pdf_splitter_tkinter_new.py
-        echo "PyInstaller finished with exit code %ERRORLEVEL%. Checking dist directory content:"
-        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-        dir dist
-        echo "Full path check:"
-        dir /s /b dist\*.exe
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Verify Asset Path
-      id: verify_asset
-      shell: cmd
-      run: |
-        echo "Verifying build output in dist..."
-        dir dist
-        if not exist "dist\PDFSplitter.exe" (
-          echo "ERROR: PDFSplitter.exe NOT found in dist directory!"
-          exit /b 1
-        )
-        echo "SUCCESS: PDFSplitter.exe found in dist."
-        echo "::set-output name=asset_path_fwd::dist/PDFSplitter.exe"
-        echo "::set-output name=asset_path_bwd::dist\PDFSplitter.exe"
-        
-    - name: Create Release
-      uses: ncipollo/release-action@v1
-      with:
-        artifacts: |
-          ${{ steps.verify_asset.outputs.asset_path_fwd }}
-          ${{ steps.verify_asset.outputs.asset_path_bwd }}
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: v${{ github.run_number }}
-        name: Release v${{ github.run_number }}
-        allowUpdates: true
-        replacesArtifacts: true
-        body: "自动构建的 PDF 分割工具版本 v${{ github.run_number }}" 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller==6.3.0 # Explicitly install PyInstaller
+
+      - name: Build executable
+        shell: cmd
+        run: |
+          echo "Running PyInstaller..."
+          pyinstaller --noconfirm --onefile --noconsole --name "PDFSplitter" pdf_splitter_tkinter_new.py
+          echo "Build finished. Checking dist directory:"
+          dir dist
+          if not exist "dist\PDFSplitter.exe" (
+            echo "Build failed: PDFSplitter.exe not found!"
+            exit /b 1
+          )
+          echo "Build successful!"
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/PDFSplitter.exe"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+          body: "Fresh build: v${{ github.run_number }}"
+          allowUpdates: true
+          replacesArtifacts: true 
