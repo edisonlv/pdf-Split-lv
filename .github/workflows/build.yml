@@ -31,38 +31,52 @@ jobs:
         pip --version
         
     - name: Build with PyInstaller
+      id: build_exe
       shell: cmd
       run: |
         echo "Starting PyInstaller build..."
         python -m PyInstaller --clean --onefile --noconsole --name "PDFSplitter" pdf_splitter_tkinter_new.py
-        echo "PyInstaller finished. Checking dist directory content:"
+        echo "PyInstaller finished with exit code %ERRORLEVEL%. Checking dist directory content:"
+        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
         dir dist
         echo "Full path check:"
         dir /s /b dist\*.exe
 
-    - name: DEBUG - Verify executable exists
+    - name: Verify and Prepare Asset
+      id: verify_asset
       shell: cmd
       run: |
-        echo "Current directory:"
-        cd
-        echo "Directory contents:"
-        dir
-        echo "DIST directory contents:"
+        echo "Verifying build output in dist..."
         dir dist
-        if exist "dist\PDFSplitter.exe" (
-          echo "SUCCESS: PDFSplitter.exe exists!"
-          copy "dist\PDFSplitter.exe" "PDFSplitter.exe"
-          echo "Copied to root directory"
-          dir
-        ) else (
-          echo "ERROR: PDFSplitter.exe NOT found!"
-          dir /s *.exe
+        if not exist "dist\PDFSplitter.exe" (
+          echo "ERROR: PDFSplitter.exe NOT found in dist directory!"
+          exit /b 1
         )
+        echo "SUCCESS: PDFSplitter.exe found in dist."
+        echo "Copying asset to root directory..."
+        copy "dist\PDFSplitter.exe" "PDFSplitter.exe"
+        echo "Copy finished with exit code %ERRORLEVEL%. Verifying file in root:"
+        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+        dir PDFSplitter.exe
+        if not exist "PDFSplitter.exe" (
+          echo "ERROR: Failed to copy PDFSplitter.exe to root directory!"
+          exit /b 1
+        )
+        echo "SUCCESS: PDFSplitter.exe verified in root directory."
+        echo "::set-output name=asset_path::./PDFSplitter.exe"
+
+    - name: List files before release
+      shell: cmd
+      run: |
+        echo "Listing root directory before release:"
+        dir
+        echo "Listing dist directory before release:"
+        dir dist
         
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "PDFSplitter.exe"
+        artifacts: ${{ steps.verify_asset.outputs.asset_path }}
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
